@@ -3,8 +3,8 @@
 Python 3 script that turns a **single RTL‑SDR dongle** into a full‑featured  
 NOAA Weather Radio receiver:
 
-* **Up to 7 simultaneous channels** (162.400 – 162.550 MHz, individually enabled in `.env`)
-* **Live re‑broadcast** to Icecast (`MP3 64 kb/s, ‑16 LUFS loudnorm`)
+* **Up to 7 simultaneous channels** (162.400 – 162.550MHz, individually enabled in `.env`)
+* **Live re‑broadcast** to Icecast (`MP3 64kb/s, ‑16 LUFS loudnorm`)
 * **Automatic EAS capture** — records audio **and** decodes SAME headers with `multimon‑ng`
 * **Optional upload** of completed EAS messages to a remote “Rdio” API
 * **Self‑healing helpers** — `ffmpeg` and `multimon‑ng` are relaunched if they exit
@@ -219,17 +219,6 @@ See the **full example** in this repo for every field.
 ```
 
 The `.txt` sidecar contains the SAME header lines captured between `ZCZC` … `NNNN`.
-
----
-
-## Troubleshooting
-
-| Symptom | Cause / Fix |
-|---------|-------------|
-| **`❌ SDR open failed`** | Another program is using the dongle; run `sudo fuser -v /dev/bus/usb/\*/\*` |
-| **No audio on Icecast** | Verify `CH_N_ICECAST_ENABLED=1` **and** correct mount URL / credentials |
-| **Choppy audio** | Lower `RTL_GAIN`, ensure CPU can keep up, consider running with `taskset -c` |
-| **PPM correction ignored** | Some dongles do not support `freq_correction` — fall back to `CENTER_FREQ` tuning |
 
 ---
 
