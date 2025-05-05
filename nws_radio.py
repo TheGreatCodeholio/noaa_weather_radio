@@ -15,12 +15,13 @@ License : MIT
 """
 
 from __future__ import annotations
-import requests, threading
-from datetime import datetime, timezone
-import os, sys, queue, signal, subprocess, threading, itertools
+import requests
+from datetime import timezone
+import os, sys, queue, signal, subprocess, threading
 from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime
+import re, unicodedata
 
 import numpy as np, scipy.signal as sig
 from dotenv import load_dotenv
@@ -64,6 +65,19 @@ def deemphasis(x: np.ndarray, zi: float) -> tuple[np.ndarray, float]:
     y, zo = sig.lfilter([1 - DEEMP_ALPHA], [1, -DEEMP_ALPHA], x, zi=[zi])
     return y, zo[0]
 
+def slugify(original: str, max_len: int = 200) -> str:
+    # NFC normalisation
+    name = unicodedata.normalize("NFC", original)
+    # Replace path separators with space (will become underscore)
+    name = name.replace("/", " ").replace("\\", " ")
+    # Keep only safe chars, collapse runs of anything else into '_'
+    name = re.sub(r"[^A-Za-z0-9._-]+", "_", name)
+    # Trim leading/trailing problem chars
+    name = name.strip("._ ")
+    # Enforce length
+    if len(name) > max_len:
+        name = name[:max_len]
+    return name or "unnamed"
 
 @dataclass
 class ChanCfg:
@@ -201,7 +215,8 @@ class Channel(threading.Thread):
 
             if "ZCZC" in line and not self.recording:
                 ts   = datetime.now().strftime("%Y%m%d_%H%M%S")
-                base = f"EAS_{self.cfg.name}_{ts}"
+                sanitized_name = slugify(self.cfg.name)
+                base           = f"EAS_{sanitized_name}_{ts}"
                 self.wav      = OUTPUT_DIR / f"{base}.wav"
                 self.txt_path = OUTPUT_DIR / f"{base}.txt"
 
@@ -213,10 +228,11 @@ class Channel(threading.Thread):
                      self.wav],
                     stdin=subprocess.PIPE)
                 self.recording = True
-                self.txt = [line.rstrip()]
+                self.txt = [line.rstrip().replace("EAS: ", "")]
                 print(f"[{self.cfg.name}] ▶️ start {self.wav}")
 
             elif "NNNN" in line and self.recording:
+                self.txt.append(line.rstrip())
                 self._finish_record()
             elif self.recording and line.strip() not in ("ZCZC", "NNNN"):
                 self.txt.append(line.rstrip())
@@ -327,7 +343,7 @@ class Channel(threading.Thread):
 # ────────────── RTL-SDR reader thread ───────────────────────────────────
 class SDRReader(threading.Thread):
     def __init__(self, chans: list[Channel]):
-        super().__init__(daemon=True);
+        super().__init__(daemon=True)
         self.chans = chans
 
     def run(self):
@@ -384,7 +400,7 @@ def main():
     except KeyboardInterrupt:
         STOP.set()
 
-    sdr.join();
+    sdr.join()
     [c.join() for c in chans]
     print("👋  Exit clean.")
 

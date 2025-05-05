@@ -20,7 +20,7 @@ EnvironmentFile=/opt/noaa_weather_radio/.env
 
 # venv interpreter + script
 WorkingDirectory=/opt/noaa_weather_radio
-ExecStart=/opt/noaa_weather_radio/.venv/bin/python /opt/noaa_weather_radio/noaa_weather_radio.py
+ExecStart=/opt/noaa_weather_radio/.venv/bin/python /opt/noaa_weather_radio/nws_radio.py
 
 # restart policy
 Restart=always
