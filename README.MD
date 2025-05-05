@@ -55,7 +55,7 @@ sudo chown $USER /opt
 
 # 2) Clone the repo
 cd /opt
-git clone https://github.com/yourname/noaa-weather-radio.git
+git clone https://github.com/TheGreatCodeholio/noaa_weather_radio.git
 cd noaa-weather-radio
 
 # 3) Create & activate a Python venv
