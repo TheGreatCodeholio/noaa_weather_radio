@@ -1,0 +1,37 @@
+# /etc/systemd/system/noaa-radio.service
+[Unit]
+Description=Multi‑channel NOAA Weather Radio demod/stream/EAS recorder
+After=network-online.target
+Wants=network-online.target
+
+# restart throttling (unit‑level!)
+StartLimitIntervalSec=60
+StartLimitBurst=10
+
+# ──────────────────────────────────────────────────────────────
+[Service]
+Type=simple
+
+User=adminlocal
+Group=adminlocal
+
+# .env gets picked up by python‑dotenv; systemd also exports it
+EnvironmentFile=/opt/noaa_weather_radio/.env
+
+# venv interpreter + script
+WorkingDirectory=/opt/noaa_weather_radio
+ExecStart=/opt/noaa_weather_radio/.venv/bin/python /opt/noaa_weather_radio/noaa_weather_radio.py
+
+# restart policy
+Restart=always
+RestartSec=4
+
+# Uncomment if the script sends systemd watchdog pings
+# WatchdogSec=30
+
+# logging
+StandardOutput=journal
+StandardError=inherit
+# ──────────────────────────────────────────────────────────────
+[Install]
+WantedBy=multi-user.target
